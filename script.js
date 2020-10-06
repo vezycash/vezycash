@@ -84,19 +84,19 @@ const quiz = [
   },
   {
     title:
-      "A malicious software that spreads through a network by itself is caled a?",
+      "A malicious software that spreads through a network by itself is called a?",
     choices: ["virus", "root kit", "trojan", "worm"],
     answer: "worm",
   },
   {
     title:
-      "A malicious software that remains even after formatting your operating system is caled a?",
+      "A malicious software that remains even after formatting your operating system is called a?",
     choices: ["virus", "root kit", "trojan", "worm"],
     answer: "root kit",
   },
   {
     title:
-      "A malicious software that pretends to do one thing while doing another is caled a?",
+      "A malicious software that pretends to do one thing while doing another is called a?",
     choices: ["virus", "root kit", "trojan", "worm"],
     answer: "trojan",
   },
@@ -558,7 +558,7 @@ const quiz = [
   },
   {
     title: "A fortnight has _______ days",
-    choices: ["14", "7", "2", "28", "10"],
+    choices: ["14", "7", "4", "28", "10"],
     answer: "14",
   },
   {
@@ -691,9 +691,14 @@ const quiz = [
     answer: "H2O",
   },
   {
-    title: "If you travel into space, you would grow:",
-    choices: ["shorter", "taller", "stop growing", "none of the above"],
-    answer: "taller",
+    title: "If you travel into space, you would:",
+    choices: [
+      "grow shorter",
+      "grow taller",
+      "stop growing",
+      "none of the above",
+    ],
+    answer: "grow taller",
   },
   {
     title: "A bamboo is a",
@@ -849,7 +854,7 @@ const quiz = [
       "a meteorologist",
       "an osteologist",
     ],
-    answer: "a osteologist",
+    answer: "an osteologist",
   },
   {
     title: "A special doctor who specializes in tumors is:",
@@ -909,6 +914,7 @@ function initializeQuiz() {
   count = 0;
   scoreBoardElem.textContent = "0";
   questions = randomizeQuestion(numberOfQuestion, quiz.length);
+  // questions[0] = 0;  //for debugging problems with specific questions
   loadingScreen.style.display = "none";
   gameScreen.style.display = "flex";
   quizController();
@@ -925,6 +931,7 @@ function quizController() {
   submitBTN.onclick = markAnswer;
   let quizIndex = questions[count];
   question = quiz[quizIndex];
+
   count >= numberOfQuestion ? gameOver() : renderQuestion();
   count += 1;
 } //end quizController
@@ -943,8 +950,8 @@ function renderQuestion() {
   for (let i = 0; i < choices.length; i++) {
     //create list items, radio and label from current question
     quizUL.innerHTML += `<li>
-    <input type="radio" name="userChoice" id="${i}" value="${choices[i]}" />
-    <label class="label" for="${i}">${capitalize(choices[i])}</label>
+    <input type="radio" name="userChoice" id="a${i}b" value="${choices[i]}" />
+    <label class="label" for="a${i}b">${capitalize(choices[i])}</label>
   </li>`;
   }
   submitBTN.textContent = "Submit";
@@ -955,10 +962,12 @@ function renderQuestion() {
 function markAnswer() {
   let userAnswer = document.querySelector('input[name="userChoice"]:checked')
     .value;
-  const user = { right: "" };
 
-  user.right = userAnswer === question.answer ? true : false;
+  const user = { right: "" };
+  const lower = (str) => str.toLowerCase();
+  user.right = lower(userAnswer) === lower(question.answer) ? true : false;
   score = user.right ? (score += 1) : score;
+
   disableInput(user, userAnswer);
 
   scoreBoardElem.textContent = score;
@@ -973,18 +982,22 @@ function disableInput(user, userAnswer) {
   radios.forEach((element) => {
     element.disabled = true; //disable all radio buttons after user submits
     element.parentElement.style.pointerEvents = "none"; //remove hand cursor from each list item
-    if (element.value.match(userAnswer)) userRadio = element.id; //get the id of the radio button the user selected
+    userRadio = element.value === userAnswer ? element.id : userRadio; //get the id of the radio button the user selected
+    correctRadio =
+      element.value === question.answer ? element.id : correctRadio; //get the id of the radio button with the right answer
   });
-
-  radios.forEach((element) => {
-    if (element.value.match(question.answer)) correctRadio = element.id;
-  });
-
-  if (user.right) {
-    document.getElementById(userRadio).parentElement.classList.add("right");
-  } else {
-    document.getElementById(userRadio).parentElement.classList.add("wrong");
-    document.getElementById(correctRadio).parentElement.classList.add("right");
+  correctRadio = document.getElementById(correctRadio);
+  userRadio = document.getElementById(userRadio);
+  if (correctRadio && userRadio) {
+    if (user.right) {
+      // document.getElementById(correctRadio).parentElement.classList.add("right");
+      correctRadio.parentElement.classList.add("right");
+    } else {
+      userRadio.parentElement.classList.add("wrong");
+      correctRadio.parentElement.classList.add("right");
+      // document.getElementById(userRadio).parentElement.classList.add("wrong");
+      // document.getElementById(correctRadio).parentElement.classList.add("right");
+    }
   }
 } //disableInput end
 
@@ -1038,6 +1051,7 @@ function showGameOverScreen(score) {
   loadingScreen.style.display = "flex";
   let messageEl = document.getElementById("messageEl");
   let loaderTitle = document.getElementById("loaderTitle");
+  let loaderBTN = document.getElementById("loaderBTN");
   let win = score > 5 ? true : false;
   let scoreColor = win ? "blue" : "red";
   let textShadow = win
@@ -1050,6 +1064,7 @@ function showGameOverScreen(score) {
   remark = `<p style="color: ${scoreColor}">${remark}</p>`;
   messageEl.style.textShadow = textShadow;
   messageEl.innerHTML = scoreMsg + remark;
+  loaderBTN.textContent = "Play another game";
 }
 //For shuffling the quiz answers
 const shuffle = (arr) => arr.sort(() => 0.5 - Math.random());
